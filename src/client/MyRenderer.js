@@ -21,7 +21,7 @@ class MyRenderer extends Renderer {
     }
 
     addSprite(obj, objName) {
-        if (objName === 'paddle') objName += obj.playerId;
+        if (objName === 'paddle') objName += obj.id;
         this.sprites[obj.id] = {
             el: document.querySelector('.' + objName)
         };
