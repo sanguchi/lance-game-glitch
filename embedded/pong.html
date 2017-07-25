@@ -1,0 +1,95 @@
+<html>
+    <head>
+        <title>Simple Pong Game</title>
+        <script src="/socket.io/socket.io.js"></script>
+        <script src="dist/lance-gg.js"></script>
+    </head>
+    <body>
+        <div style="width: 400px; height: 400px; background: black">
+            <div style="position:absolute;width:10px;height:50px;background:white" id="gameobj1" class="paddle1"></div>
+            <div style="position:absolute;width:10px;height:50px;background:white" id="gameobj2" class="paddle2"></div>
+            <div style="position:absolute;width:5px; height:5px; background:white" id="gameobj3" class="ball"></div>
+        </div>
+
+        <script>
+
+        LANCE.on('client__connected', pong);
+
+        function pong() {
+
+            // define objects, passing the networked attributes and options
+            LANCE.defineObject('Ball', {}, { bendingVelocityMultiple: 0 });
+            LANCE.defineObject('Paddle', {}, {});
+            var ball = null;
+
+            // create the objects as players join
+            LANCE.on('playerJoined', function(ev) {
+                // if no players joined, add the first paddle
+                // otherwise, if one player already joined, add second paddle and a ball
+                if (LANCE.gameEngine.world.objects.length === 0) {
+                    LANCE.gameEngine.addObjectToWorld('Paddle', { id: 1, x: PADDING });
+                } else if (LANCE.gameEngine.world.objects.length === 0) {
+                    LANCE.gameEngine.addObjectToWorld('Paddle', { id: 2, x: WIDTH - PADDING });
+                    ball = LANCE.gameEngine.addObjectToWorld('Ball', { id: 3, x: WIDTH / 2, y: HEIGHT / 2});
+                    ball.velocity.set(2,2);
+                }
+            });
+
+            // check each step
+            LANCE.on('step', function() {
+                checkPaddleHit();
+                checkWallHit();
+            });
+
+            function checkPaddleHit() {
+                // CHECK LEFT EDGE:
+                if (ball.position.x <= PADDING + PADDLE_WIDTH &&
+                    ball.position.y >= paddle1.y && ball.position.y <= paddle1.position.y + PADDLE_HEIGHT &&
+                    ball.velocity.x < 0) {
+                    // ball moving left hit player 1 paddle
+                    ball.velocity.x *= -1;
+                    ball.position.x = PADDING + PADDLE_WIDTH + 1;
+                }
+                // CHECK RIGHT EDGE:
+                if (ball.position.x >= WIDTH - PADDING - PADDLE_WIDTH &&
+                    ball.position.y >= paddle2.position.y && ball.position.y <= paddle2.position.y + PADDLE_HEIGHT &&
+                    ball.velocity.x > 0) {
+                    // ball moving right hits player 2 paddle
+                    ball.velocity.x *= -1;
+                    ball.position.x = WIDTH - PADDING - PADDLE_WIDTH - 1;
+                }
+            }
+
+            function checkWallHit() {
+                // check left and right walls
+                if (ball.position.x <= 0) {
+                    ball.velocity.x *= -1;
+                    ball.position.x = 0;
+                    console.log(`player 2 scored`);
+                } else if (ball.position.x >= WIDTH ) {
+                    ball.velocity.x *= -1;
+                    ball.position.x = WIDTH - 1;
+                    console.log(`player 1 scored`);
+                }
+                // check top and bottom walls
+                if (ball.position.y <= 0) {
+                    ball.position.y = 1;
+                    ball.velocity.y *= -1;
+                } else if (ball.position.y >= HEIGHT) {
+                    ball.position.y = HEIGHT - 1;
+                    ball.velocity.y *= -1;
+                }
+            }
+
+            // update sprite positions
+            LANCE.on('draw', function() {
+                LANCE.gameEngine.forEachObject(function(id, obj) {
+                    var el = document.querySelector('#gameobj' + id);
+                    el.style.left = LANCE.gameEngine.world.objects[objId].position.x + 'px';
+                    el.style.top = LANCE.gameEngine.world.objects[objId].position.y + 'px';
+                });
+            });
+        }
+        </script>
+    </body>
+</html>

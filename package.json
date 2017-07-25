@@ -7,7 +7,7 @@
   "description": "An HTML5 multiplayer game based on Lance",
   "main": "main.js",
   "dependencies": {
-    "browserify": "^13.0.1",
+    "browserify": "^14.4.0",
     "express": "^4.14.0",
     "lance-gg": "~1.0.0",
     "query-string": "^4.2.3",
@@ -20,6 +20,8 @@
     "watchify": "^3.7.0"
   },
   "scripts": {
+    "build-embedded": "browserify embedded/client.js -i nodejs-physijs -o embedded/dist/lance-gg.js",
+    "start-embedded": "EMBEDDED=true npm start",
     "start": "node main.js",
     "postinstall": "browserify src/client/clientMain.js -i nodejs-physijs -o dist/bundle.js ",
     "build": "browserify src/client/clientMain.js -i nodejs-physijs -o dist/bundle.js ",
@@ -30,7 +32,9 @@
     "url": ""
   },
   "browserify": {
-    "transform": ["babelify"]
+    "transform": [
+      "babelify"
+    ]
   },
   "keywords": [
     "game",

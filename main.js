@@ -6,6 +6,7 @@ const path = require('path');
 
 const PORT = process.env.PORT || 3000;
 const INDEX = path.join(__dirname, './index.html');
+const EMBEDDED = process.env.hasOwnProperty('EMBEDDED') && process.env.EMBEDDED === 'true';
 
 // define routes and socket
 const server = express();
@@ -20,8 +21,7 @@ const MyGameEngine = require(path.join(__dirname, 'src/common/MyGameEngine.js'))
 const SimplePhysicsEngine = require('lance-gg').physics.SimplePhysicsEngine;
 
 // Game Instances
-const physicsEngine = new SimplePhysicsEngine();
-const gameEngine = new MyGameEngine({ physicsEngine, traceLevel: 1 });
+const gameEngine = new MyGameEngine(SimplePhysicsEngine, { traceLevel: 1, embedded: EMBEDDED });
 const serverEngine = new MyServerEngine(io, gameEngine, { debug: {}, updateRate: 6 });
 
 // start the game
