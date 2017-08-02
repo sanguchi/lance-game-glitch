@@ -14,31 +14,58 @@
         <script>
 
         LANCE.on('client__connected', pong);
-
         function pong() {
 
-            // define objects, passing the networked attributes and options
+            // define object types, passing the networked attributes and options
             LANCE.defineObject('Ball', {}, { bendingVelocityMultiple: 0 });
             LANCE.defineObject('Paddle', {}, {});
-            var ball = null;
+            var PADDING = 20, WIDTH = 400, HEIGHT = 400, PADDLE_WIDTH = 10, PADDLE_HEIGHT = 50;
+            var localBall = null;
+            var localPaddle = null;
+            var pressedKeys = {};
 
             // create the objects as players join
+            //
+            // 1. First player to join will create and control his own paddle
+            // 2. Second player to join will create and control his own paddle and the ball
+            //
             LANCE.on('playerJoined', function(ev) {
-                // if no players joined, add the first paddle
-                // otherwise, if one player already joined, add second paddle and a ball
-                if (LANCE.gameEngine.world.objects.length === 0) {
-                    LANCE.gameEngine.addObjectToWorld('Paddle', { id: 1, x: PADDING });
-                } else if (LANCE.gameEngine.world.objects.length === 0) {
-                    LANCE.gameEngine.addObjectToWorld('Paddle', { id: 2, x: WIDTH - PADDING });
-                    ball = LANCE.gameEngine.addObjectToWorld('Ball', { id: 3, x: WIDTH / 2, y: HEIGHT / 2});
-                    ball.velocity.set(2,2);
+                if (ev.playerCount === 1) {
+                    localPaddle = LANCE.newObject('Paddle', { id: 1 });
+                    localPaddle.position.set(PADDING, 0);
+                    LANCE.gameEngine.addObjectToWorld(localPaddle);
+                } else if (ev.playerCount === 2) {
+                    localPaddle = LANCE.newObject('Paddle', { id: 2 });
+                    localBall = LANCE.newObject('Ball', { id: 3 });
+                    localPaddle.position.set(WIDTH - PADDING, 0);
+                    localBall.position.set(WIDTH / 2, HEIGHT / 2);
+                    localBall.velocity.set(2,2);
+                    LANCE.gameEngine.addObjectToWorld(localPaddle);
+                    LANCE.gameEngine.addObjectToWorld(localBall);
                 }
             });
 
-            // check each step
-            LANCE.on('step', function() {
-                checkPaddleHit();
-                checkWallHit();
+            // on each step
+            LANCE.on('postStep', function() {
+
+                if (!localPaddle) return;
+
+                // process user inputs at the end of this step
+                if (pressedKeys.up) localPaddle.position.y -= 5;
+                else if (pressedKeys.down) localPaddle.position.y += 5;
+
+                // update objects controlled by this client on the server
+                if (localPaddle) LANCE.updateObjectOnServer(localPaddle);
+                if (localBall) LANCE.updateObjectOnServer(localBall);
+
+                // check game rules
+                var paddle1 = LANCE.gameEngine.world.objects[1];
+                var paddle2 = LANCE.gameEngine.world.objects[2];
+                var ball = LANCE.gameEngine.world.objects[3];
+                if (paddle1 && paddle2 && ball) {
+                    checkPaddleHit(paddle1, paddle2, ball);
+                    checkWallHit(paddle1, paddle2, ball);
+                }
             });
 
             function checkPaddleHit() {
@@ -82,13 +109,26 @@
             }
 
             // update sprite positions
-            LANCE.on('draw', function() {
-                LANCE.gameEngine.forEachObject(function(id, obj) {
+            LANCE.on('client__draw', function() {
+                LANCE.gameEngine.world.forEachObject(function(id, obj) {
                     var el = document.querySelector('#gameobj' + id);
-                    el.style.left = LANCE.gameEngine.world.objects[objId].position.x + 'px';
-                    el.style.top = LANCE.gameEngine.world.objects[objId].position.y + 'px';
+                    el.style.left = LANCE.gameEngine.world.objects[id].position.x + 'px';
+                    el.style.top = LANCE.gameEngine.world.objects[id].position.y + 'px';
                 });
             });
+
+            // handle inputs
+            document.onkeydown = (e) => { onKeyChange(e, true); };
+            document.onkeyup = (e) => { onKeyChange(e, false); };
+            function onKeyChange(e, isPressed) {
+                e = e || window.event;
+
+                if (e.keyCode == '38') {
+                    pressedKeys.up = isPressed;
+                } else if (e.keyCode == '40') {
+                    pressedKeys.down = isPressed;
+                }
+            }
         }
         </script>
     </body>

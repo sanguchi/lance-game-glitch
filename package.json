@@ -21,7 +21,7 @@
   },
   "scripts": {
     "build-embedded": "browserify embedded/client.js -i nodejs-physijs -o embedded/dist/lance-gg.js",
-    "start-embedded": "EMBEDDED=true npm start",
+    "start-embedded": "CLIENT_CONTROLLED=true npm start",
     "start": "node main.js",
     "postinstall": "browserify src/client/clientMain.js -i nodejs-physijs -o dist/bundle.js ",
     "build": "browserify src/client/clientMain.js -i nodejs-physijs -o dist/bundle.js ",

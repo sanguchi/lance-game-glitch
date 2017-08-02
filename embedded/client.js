@@ -10,7 +10,6 @@ const defaults = {
     traceLevel: 1,
     delayInputCount: 3,
     clientIDSpace: 1000000,
-    embedded: true,
     syncOptions: {
         sync: qsOptions.sync || 'extrapolate',
         localObjBending: 0.0,
