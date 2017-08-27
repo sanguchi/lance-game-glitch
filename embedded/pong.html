@@ -68,7 +68,7 @@
                 }
             });
 
-            function checkPaddleHit() {
+            function checkPaddleHit(paddle1, paddle2, ball) {
                 // CHECK LEFT EDGE:
                 if (ball.position.x <= PADDING + PADDLE_WIDTH &&
                     ball.position.y >= paddle1.y && ball.position.y <= paddle1.position.y + PADDLE_HEIGHT &&
@@ -87,7 +87,7 @@
                 }
             }
 
-            function checkWallHit() {
+            function checkWallHit(paddle1, paddle2, ball) {
                 // check left and right walls
                 if (ball.position.x <= 0) {
                     ball.velocity.x *= -1;
